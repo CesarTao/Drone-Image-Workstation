@@ -1,0 +1,111 @@
+CREATE DATABASE IF NOT EXISTS dji_drone_db DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+USE dji_drone_db;
+
+CREATE TABLE IF NOT EXISTS `drone_photos` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  
+  `filename` VARCHAR(255) COMMENT '文件名',
+  `FolderName` VARCHAR(255) COMMENT '来源文件夹名称',
+  `FullPath` VARCHAR(768) COMMENT '完整绝对路径',
+  `FileSize` BIGINT COMMENT '文件大小(Bytes)',
+  `FileType` VARCHAR(20) COMMENT '文件后缀类型',
+  `FileHash` VARCHAR(32) COMMENT 'MD5哈希值',
+  
+  `capture_time` DATETIME COMMENT '拍摄时间',
+  `Version` VARCHAR(50) COMMENT '元数据版本',
+  `ImageSource` VARCHAR(50) COMMENT '镜头类型',
+  `mark_note` TEXT COMMENT '用户备注信息',
+
+  `GpsLatitude` DOUBLE COMMENT '纬度',
+  `GpsLongitude` DOUBLE COMMENT '经度',
+  `GpsStatus`  VARCHAR(50) COMMENT 'GPS定位模式',
+  `AbsoluteAltitude` FLOAT COMMENT '绝对高度/椭球高',
+  `RelativeAltitude` FLOAT COMMENT '相对高度',
+  `AltitudeType` VARCHAR(50) COMMENT '高度模式',
+
+  `GimbalPitchDegree` FLOAT COMMENT '云台俯仰(Pitch)',
+  `GimbalYawDegree` FLOAT COMMENT '云台偏航(Yaw)',
+  `GimbalRollDegree` FLOAT COMMENT '云台横滚(Roll)',
+  `FlightPitchDegree` FLOAT COMMENT '机身俯仰',
+  `FlightYawDegree` FLOAT COMMENT '机身偏航',
+  `FlightRollDegree` FLOAT COMMENT '机身横滚',
+
+  `FlightXSpeed` FLOAT COMMENT '速度X',
+  `FlightYSpeed` FLOAT COMMENT '速度Y',
+  `FlightZSpeed` FLOAT COMMENT '速度Z',
+
+  `RtkFlag` INT COMMENT 'RTK状态标记 (50为固定解)',
+  `RtkStdLon` FLOAT COMMENT '经度标准差',
+  `RtkStdLat` FLOAT COMMENT '纬度标准差',
+  `RtkStdHgt` FLOAT COMMENT '高度标准差',
+
+  `LRFTargetDistance` FLOAT COMMENT '激光测距距离',
+  `LRFTargetAbsAlt` FLOAT COMMENT '目标绝对高度',
+  `LRFTargetAlt` FLOAT COMMENT '目标相对高度',
+  `LRFTargetLat` DOUBLE COMMENT '目标纬度',
+  `LRFTargetLon` DOUBLE COMMENT '目标经度',
+  `LRFStatus` VARCHAR(20) COMMENT 'LRF状态',
+
+  `DroneModel` VARCHAR(100) COMMENT '无人机型号',
+  `DroneSerialNumber` VARCHAR(100) COMMENT '无人机序列号',
+  `CameraSerialNumber` VARCHAR(100) COMMENT '相机序列号',
+  `FlightLineInfo` VARCHAR(255) COMMENT '航线UUID',
+  `SurveyingMode` VARCHAR(50) COMMENT '测绘模式',
+
+  `VideoDuration` FLOAT COMMENT '视频时长(秒)',
+  `VideoFrameRate` FLOAT COMMENT '视频帧率',
+  `VideoWidth` INT COMMENT '视频宽',
+  `VideoHeight` INT COMMENT '视频高',
+
+  `CamReverse` INT DEFAULT 0,
+  `GimbalReverse` INT DEFAULT 0,
+  `created_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '入库时间',
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_filehash` (`FileHash`),
+  KEY `idx_capture_time` (`capture_time`),
+  KEY `idx_foldername` (`FolderName`),
+  KEY `idx_rtk` (`RtkFlag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='无人机航拍元数据表';
+
+
+
+
+CREATE TABLE IF NOT EXISTS `file_dir_tags` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `folder_name` VARCHAR(255) COMMENT '文件夹名 (最后一级)',
+  `full_path` VARCHAR(768) NOT NULL COMMENT '文件夹完整路径',
+  
+  `dir_level_1` VARCHAR(255),
+  `dir_level_2` VARCHAR(255),
+  `dir_level_3` VARCHAR(255),
+  
+  `tag_color` VARCHAR(20) COMMENT '颜色标记 (红/黄/绿/蓝/无)',
+  `mark_note` TEXT COMMENT '目录层级的备注',
+  
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_full_path` (`full_path`) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件夹层级标记表';
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS `task_hours` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `batch_id` VARCHAR(50) COMMENT '导入批次ID (时间戳)',
+  `source_filename` VARCHAR(255) COMMENT '来源Excel文件名',
+  
+  `task_date` VARCHAR(50) COMMENT '任务日期',
+  `start_time` VARCHAR(50) COMMENT '开始时间',
+  `end_time` VARCHAR(50) COMMENT '结束时间',
+  `duration_minutes` FLOAT COMMENT '任务时长 (分钟)',
+  
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '导入时间',
+
+  PRIMARY KEY (`id`),
+  KEY `idx_task_date` (`task_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='飞行任务时长统计表';
